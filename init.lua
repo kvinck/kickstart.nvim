@@ -16,7 +16,7 @@ vim.g.have_nerd_font = true
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -80,8 +80,30 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 -- Diagnostic keymaps
 vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
 vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
-vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
+vim.keymap.set('n', '<leader>lf', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+
+vim.keymap.set('n', '<leader>xx', function()
+  require('trouble').toggle()
+end)
+vim.keymap.set('n', '<leader>xw', function()
+  require('trouble').toggle 'workspace_diagnostics'
+end)
+vim.keymap.set('n', '<leader>xd', function()
+  require('trouble').toggle 'document_diagnostics'
+end)
+vim.keymap.set('n', '<leader>xq', function()
+  require('trouble').toggle 'quickfix'
+end)
+vim.keymap.set('n', '<leader>xl', function()
+  require('trouble').toggle 'loclist'
+end)
+vim.keymap.set('n', 'gR', function()
+  require('trouble').toggle 'lsp_references'
+end)
+
+vim.keymap.set('n', '<leader>e', '<cmd>NvimTreeToggle<CR>', { desc = 'Toggle Nvim Tree' })
+vim.keymap.set('n', '<leader>x', '<cmd>bd<CR>', { desc = 'Close current buffer' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -156,6 +178,12 @@ require('lazy').setup({
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
 
+  {
+    'folke/trouble.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    opts = {},
+  },
+
   -- Here is a more advanced example where we pass configuration
   -- options to `gitsigns.nvim`. This is equivalent to the following Lua:
   --    require('gitsigns').setup({ ... })
@@ -174,6 +202,94 @@ require('lazy').setup({
     },
   },
 
+  {
+    'nvim-tree/nvim-tree.lua',
+    version = '*',
+    lazy = false,
+    dependencies = {
+      'nvim-tree/nvim-web-devicons',
+    },
+    config = function()
+      require('nvim-tree').setup {}
+    end,
+  },
+
+  {
+    'mfussenegger/nvim-dap-python',
+    ft = 'python',
+    dependencies = {
+      'mfussenegger/nvim-dap',
+      'rcarriga/nvim-dap-ui',
+    },
+    config = function(_, opts)
+      local path = '~/.local/share/nvim/mason/packages/debugpy/venv/bin/python'
+      local dap = require 'dap'
+      require('dap-python').setup(path)
+      dap.configurations.python = {
+        {
+          type = 'python',
+          request = 'launch',
+          name = 'Launch file',
+          program = '${file}',
+          pythonPath = path,
+        },
+        {
+          type = 'debugpy',
+          request = 'launch',
+          name = 'Django',
+          program = '${workspaceFolder}/manage.py',
+          args = {
+            'runserver',
+            '0.0.0.0:8000',
+          },
+          justMyCode = true,
+          django = true,
+          console = 'integratedTerminal',
+        },
+        {
+          type = 'python',
+          request = 'attach',
+          name = 'Attach remote',
+          connect = function()
+            return {
+              host = 'localhost',
+              port = 5678,
+            }
+          end,
+        },
+        {
+          type = 'python',
+          request = 'launch',
+          name = 'Launch file with arguments',
+          program = '${file}',
+          args = function()
+            local args_string = vim.fn.input 'Arguments: '
+            return vim.split(args_string, ' +')
+          end,
+          console = 'integratedTerminal',
+          pythonPath = path,
+        },
+      }
+    end,
+  },
+
+  {
+    'romgrk/barbar.nvim',
+    dependencies = {
+      'lewis6991/gitsigns.nvim', -- OPTIONAL: for git status
+      'nvim-tree/nvim-web-devicons', -- OPTIONAL: for file icons
+    },
+    init = function()
+      vim.g.barbar_auto_setup = false
+    end,
+    opts = {
+      -- lazy.nvim will automatically call setup for you. put your options here, anything missing will use the default:
+      -- animation = true,
+      -- insert_at_start = true,
+      -- …etc.
+    },
+    version = '^1.0.0', -- optional: only update when a new 1.x version is released
+  },
   -- NOTE: Plugins can also be configured to run Lua code when they are loaded.
   --
   -- This is often very useful to both group configuration, as well as handle
@@ -266,6 +382,11 @@ require('lazy').setup({
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
       require('telescope').setup {
+        pickers = {
+          find_files = {
+            hidden = true,
+          },
+        },
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
@@ -483,7 +604,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- pyright = {},
+        pyright = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -569,11 +690,11 @@ require('lazy').setup({
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
-        -- python = { "isort", "black" },
+        python = { 'isort', 'black' },
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
-        -- javascript = { { "prettierd", "prettier" } },
+        javascript = { { 'prettierd', 'prettier' } },
       },
     },
   },
@@ -790,12 +911,12 @@ require('lazy').setup({
   --  Here are some example plugins that I've included in the Kickstart repository.
   --  Uncomment any of the lines below to enable them (you will need to restart nvim).
   --
-  -- require 'kickstart.plugins.debug',
+  require 'kickstart.plugins.debug',
   -- require 'kickstart.plugins.indent_line',
-  -- require 'kickstart.plugins.lint',
-  -- require 'kickstart.plugins.autopairs',
-  -- require 'kickstart.plugins.neo-tree',
-  -- require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
+  require 'kickstart.plugins.lint',
+  require 'kickstart.plugins.autopairs',
+  require 'kickstart.plugins.neo-tree',
+  require 'kickstart.plugins.gitsigns', -- adds gitsigns recommend keymaps
 
   -- NOTE: The import below can automatically add your own plugins, configuration, etc from `lua/custom/plugins/*.lua`
   --    This is the easiest way to modularize your config.
