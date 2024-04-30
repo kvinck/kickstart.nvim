@@ -103,7 +103,7 @@ vim.keymap.set('n', 'gR', function()
 end)
 
 vim.keymap.set('n', '<leader>e', '<cmd>NvimTreeToggle<CR>', { desc = 'Toggle Nvim Tree' })
-vim.keymap.set('n', '<leader>x', '<cmd>bd<CR>', { desc = 'Close current buffer' })
+vim.keymap.set('n', '<leader>z', '<cmd>bd<CR>', { desc = 'Close current buffer' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
