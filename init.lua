@@ -107,6 +107,8 @@ end)
 vim.keymap.set('n', '<leader>e', '<cmd>NvimTreeToggle<CR>', { desc = 'Toggle Nvim Tree' })
 vim.keymap.set('n', '<leader>z', '<cmd>bd<CR>', { desc = 'Close current buffer' })
 vim.keymap.set('i', '<C-c>', '<Esc>')
+vim.keymap.set('i', 'jj', '<Esc>')
+vim.keymap.set('i', 'jk', '<Esc><cmd>w<CR>')
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -509,7 +511,7 @@ require('lazy').setup({
 
       -- `neodev` configures Lua LSP for your Neovim config, runtime and plugins
       -- used for completion, annotations and signatures of Neovim apis
-      { 'folke/neodev.nvim', opts = {} },
+      { 'folke/neodev.nvim', opts = { lazy = true } },
     },
     config = function()
       -- Brief aside: **What is LSP?**
