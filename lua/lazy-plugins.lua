@@ -1,4 +1,7 @@
 require('lazy').setup({
+  change_detection = {
+    notify = false,
+  },
   'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
 
   -- "gc" to comment visual regions/lines
